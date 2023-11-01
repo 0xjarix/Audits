@@ -95,7 +95,7 @@ Make the following change:
                 return i;
             }
         }
-        return -1;
++       return -1;
     }
 - function getActivePlayerIndex(address player) external view returns (uint256) {
         for (uint256 i = 0; i < players.length; i++) {
@@ -103,7 +103,7 @@ Make the following change:
                 return i;
             }
         }
-        return 0;
+-       return 0;
     }
 
 ```
