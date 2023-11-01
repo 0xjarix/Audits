@@ -32,9 +32,9 @@ Make the following change:
 ```diff
 - payable(msg.sender).sendValue(entranceFee);
 
-  players[playerIndex] = address(0);
+- players[playerIndex] = address(0);
 + players[playerIndex] = address(0);
 
-  payable(msg.sender).sendValue(entranceFee);
++ payable(msg.sender).sendValue(entranceFee);
 
 ```
