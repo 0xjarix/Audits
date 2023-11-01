@@ -23,7 +23,7 @@ Checks-Effects-Interactions order was not respected in the refund() function all
 - **Step 3**: When refund() is called, the protocol makes the precious error of making an external call to the attacker's contract before updating the list of the players' address
 - **Step 4**: The attacker doesn't forget to add a receive() or fallback() function to his malicious contract that will keep on calling the refund() function till he drains the prtocol's contract from all its funds.
 - **Outcome**: The protocol will lose all its funds.
-- **Implications**: The players that entered the raffle before the attacker are victims of this exploit as players cannot get refunded anyomre, the owner will not get his fees and the winner will not get his prize amount.
+- **Implications**: The players that entered the same raffle as the attacker are victims of this exploit as players cannot get refunded anymore, the owner will not get his fees and the winner will not get his prize amount.
 
 ## Recommendation
 
