@@ -13,7 +13,7 @@ Checks-Effects-Interactions order was not respected in the refund() function all
 
 ### Actors:
 - **Attacker**: the malicious player who's going to perform the reentrancy attack.
-- **Victim**: Any player that entered the raffle before the attacker.
+- **Victim**: Any player that entered the same raffle as the attacker.
 - **Protocol**: The raffle contract itself.
 
 ### Exploit Scenario:
@@ -63,5 +63,47 @@ Make the following change:
   require(msg.sender == address(0), "Never recive funds outside of the enterRaffle() function"
 };
 -
+
+```
+## Proof of Concept for [Logic Implementation]
+
+### Overview:
+There's a bad logic implementation in the getActivePlayerIndex() function, that vulnerability enables the first to enter the raffle to get refunded whenever he wants.
+
+### Actors:
+- **Attacker**: the malicious player EOA that is the first to enter the raffle, his index is 0.
+- **Victim**: Any player that entered the same raffle as the attacker.
+- **Protocol**: The raffle contract itself.
+
+### Exploit Scenario:
+- **Initial State**: Protocl is depolyed.
+- **Step 1**: The attacker is the first to enter the raffle, his index is 0
+- **Step 2**: The attacker creates a malicious contract to call the getActivePlayerIndex() by passing in argument the address of the malicious contract that will not be found.
+- **Step 3**: A bad implementation of the getActivePlayerIndex() will return 0 when the address will not be found.
+- **Step 4**: The malicious contract will impersonate the attacker's initial address to be able to get a refund 
+- **Outcome**: The attacker can get refunded twice
+- **Implications**: The attacker can get refunded a lot more if he creates other malicious contracts
+
+## Recommendation
+
+Make the following change:
+
+```diff
++ function getActivePlayerIndex(address player) external view returns (int128) {
+        for (uint256 i = 0; i < players.length; i++) {
+            if (players[i] == player) {
+                return i;
+            }
+        }
+        return -1;
+    }
+- function getActivePlayerIndex(address player) external view returns (uint256) {
+        for (uint256 i = 0; i < players.length; i++) {
+            if (players[i] == player) {
+                return i;
+            }
+        }
+        return 0;
+    }
 
 ```
