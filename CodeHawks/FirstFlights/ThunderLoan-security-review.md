@@ -72,73 +72,63 @@ Make the following change:
 + assetToken.mint(msg.sender, mintAmount);
 
 ```
-## Proof of Concept for [DoS Attack]
+## Proof of Concept for [Reentrancy Attack 3]
 
 ### Overview:
-There's a dangerous check that was made in the absence of fallback functions in the contract. That check is in the withdrawFees() function that allows the feeAddress to withdraw fees.
+Attacker can do a reentrancy attack using the above function and taking several loans and repaying it as 1.
 
 ### Actors:
-- **Attacker**: the malicious EOA/contract to perform the DoS attack.
-- **Victim**: owner of the feeAddress, so owner most probably.
-- **Protocol**: The raffle contract itself.
+- **Attacker**: the malicious user.
+- **Victim**: other users, LPs, ThunderLoan.
+- **Protocol**: The ThunderLoan contract itself.
 
 ### Exploit Scenario:
-- **Initial State**: winner has been selected and the victim is ready to call withdrawFees().
-- **Step 1**: the attacker decides to send a bit of ether, just enough to make address(this).balance different from uint256(totalFees).
-- **Step 2**: ```require(address(this).balance == uint256(totalFees), "PuppyRaffle: There are currently players active!");``` fails when the victim calls withdrawFees().
-- **Outcome**: Victim cannot take its profits.
-- **Implications**: Victim will have its funds locked in the contract
+- **Initial State**: The protocol is deployed
+- **Step 1**: the attacker decides to take a flash Loan using a malicious contract that calls the flashLoan() function.
+- **Step 2**: the protocol makes the error of making an external call to the attacker's malicious contract that contains a receive() that will call back flashLoan() with the same amount, that will decrease the startingBalance.
+- **Step 3**: The attacker gets away by repaying what he's owed for his last flashLoan request.
+- **Outcome**: Attacker steals a lot of fund providing he repays for his last request.
+- **Implications**: Victims will lose their funds
 
 ## Recommendation
 
 Make the following change:
 
 ```diff
-+ receive() external payable {
-  require(msg.sender == address(0), "Never recive funds outside of the enterRaffle() function"
-};
--
+- if (!receiverAddress.isContract()) {
+      revert ThunderLoan__CallerIsNotContract();
+  }
++ require(!receiverAddress.isContract(), "User cannot be a contract to prevent from reentrancy"
 
 ```
-## Proof of Concept for [Logic Implementation]
+## Proof of Concept for [Bad Logic Implementation]
 
 ### Overview:
-There's a bad logic implementation in the getActivePlayerIndex() function, that vulnerability enables the first to enter the raffle to get refunded whenever he wants.
+There's a bad logic implementation in the redeem(IERC20 token, uint256 amountOfAssetToken) function, that vulnerability the LP to redeem more than what he's owed.
 
 ### Actors:
-- **Attacker**: the malicious player EOA that is the first to enter the raffle, his index is 0.
-- **Victim**: Any player that entered the same raffle as the attacker.
-- **Protocol**: The raffle contract itself.
+- **Attacker**: the malicious LP that wants to redeem his funds.
+- **Victim**: Other LPs.
+- **Protocol**: The ThunderLoan contract itself.
 
 ### Exploit Scenario:
-- **Initial State**: Protocl is depolyed.
-- **Step 1**: The attacker is the first to enter the raffle, his index is 0
-- **Step 2**: The attacker creates a malicious contract to call the getActivePlayerIndex() by passing in argument the address of the malicious contract that will not be found.
-- **Step 3**: A bad implementation of the getActivePlayerIndex() will return 0 when the address will not be found.
-- **Step 4**: The malicious contract will impersonate the attacker's initial address to be able to get a refund 
-- **Outcome**: The attacker can get refunded twice
-- **Implications**: The attacker can get refunded a lot more if he creates other malicious contracts
+- **Initial State**: Protocl is depolyed, Attacker has already deposited some amounts.
+- **Step 1**: We know amountUnderlying depands on amountOfAssetToken because:
+uint256 amountUnderlying = (amountOfAssetToken * exchangeRate) / assetToken.EXCHANGE_RATE_PRECISION();
+LPs can redeem more than they are owed from the protocol if they input a certain amountOfAssetToken such that:
+amountOfAssetToken > assetToken.balanceOf(msg.sender) && amountOfAssetToken < type(uint256).max.
+In order to max their profits they can input: amountOfAssetToken = type(uint256).max - 1.
+The attacker will also burn more than he should: assetToken.burn(msg.sender, amountOfAssetToken);
+- **Outcome**: The attacker can redeem much more than what he's owed but will also burn more than he should
 
 ## Recommendation
 
 Make the following change:
 
 ```diff
-+ function getActivePlayerIndex(address player) external view returns (int128) {
-        for (uint256 i = 0; i < players.length; i++) {
-            if (players[i] == player) {
-                return i;
-            }
-        }
-+       return -1;
-    }
-- function getActivePlayerIndex(address player) external view returns (uint256) {
-        for (uint256 i = 0; i < players.length; i++) {
-            if (players[i] == player) {
-                return i;
-            }
-        }
--       return 0;
-    }
+- if (amountOfAssetToken == type(uint256).max) {
+-     amountOfAssetToken = assetToken.balanceOf(msg.sender);
+- }
++ require (amountOfAssetToken >= assetToken.balanceOf(msg.sender), "Not enough assetToekn in msg.sender's balance")
 
 ```
