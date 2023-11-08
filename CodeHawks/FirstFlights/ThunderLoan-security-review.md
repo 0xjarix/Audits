@@ -96,9 +96,11 @@ Make the following change:
 
 ```diff
 - if (!receiverAddress.isContract()) {
-      revert ThunderLoan__CallerIsNotContract();
-  }
-+ require(!receiverAddress.isContract(), "User cannot be a contract to prevent from reentrancy"
+-     revert ThunderLoan__CallerIsNotContract();
+- }
++ if (receiverAddress.isContract()) {
++     revert ThunderLoan__CallerIsNotContract();
++ }
 
 ```
 ## Proof of Concept for [Bad Logic Implementation]
