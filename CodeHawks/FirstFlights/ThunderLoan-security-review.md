@@ -98,9 +98,7 @@ Make the following change:
 - if (!receiverAddress.isContract()) {
 -     revert ThunderLoan__CallerIsNotContract();
 - }
-+ if (receiverAddress.isContract()) {
-+     revert ThunderLoan__CallerIsNotContract();
-+ }
++ require (!receiverAddress.isContract(), "User cannot be a contract, to prevent from reentrancy attacks") 
 
 ```
 ## Proof of Concept for [Bad Logic Implementation]
