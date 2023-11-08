@@ -84,8 +84,8 @@ Attacker can do a reentrancy attack using the above function and taking several 
 
 ### Exploit Scenario:
 - **Initial State**: The protocol is deployed
-- **Step 1**: the attacker decides to take a flash Loan using a malicious contract that calls the flashLoan() function.
-- **Step 2**: the protocol makes the error of making an external call to the attacker's malicious contract that contains a receive() that will call back flashLoan() with the same amount, that will decrease the startingBalance.
+- **Step 1**: the attacker decides to take a flash Loan using a malicious contract that calls the flashLoan() function by passing address(this) as the receiverAddress.
+- **Step 2**: the protocol makes the error of making an external call to the attacker's malicious contract that contains a receive() that will call back flashLoan() with the same amount, that will decrease the startingBalance and still address(this) as receiverAddress.
 - **Step 3**: The attacker gets away by repaying what he's owed for his last flashLoan request.
 - **Outcome**: Attacker steals a lot of fund providing he repays for his last request.
 - **Implications**: Victims will lose their funds
