@@ -58,7 +58,7 @@ Checks-Effects-Interactions order was not respected in the deposit(IERC20 token,
 - **Step 3**: When deposit(IERC20 token, uint256 amount) is called, the protocol makes the precious error of making an external call to the attacker's contract before actually depositing the funds through token.safeTransferFrom(msg.sender, address(assetToken), amount);.
 - **Step 4**: The attacker doesn't forget to add a receive() or fallback() function to his malicious contract that will keep on calling the  function till he drains the protocol's contract from all its funds.
 - **Outcome**: The protocol will lose all its funds.
-- **Implications**: The players that entered the same raffle as the attacker are victims of this exploit as players cannot get refunded anymore, the owner will not get his fees and the winner will not get his prize amount.
+- **Implications**: No more liquidity
 
 ## Recommendation
 The Upgraded is a bit better than the V1 as the exchange rate gets higher but still room for reentrancy so...
