@@ -2,7 +2,7 @@
 
 *********************review commit hash -********************* **[e3370783aeda4b41e0054cf1febe75020b0beaae](https://github.com/Cyfrin/2023-11-Santas-List)**
 
-### The code was reviewed for a total of  hours.
+### The code was reviewed for a total of 1 hour.
 ---
 
 
@@ -32,5 +32,36 @@ Make the following change:
 ```diff
 - function checkList(address person, Status status) external {
 + function checkList(address person, Status status) external onlySanta {
+
+```
+
+## H1 [Bad ALogic Implementation When Buying a Present for Someone Else]
+
+### Overview:
+The function buyPresent() is badly implemented as it burns santaTokens in an unsafe manner that might cause an underflow from the presentReceiver instead of the msg.sender and sends the NFT to the msg.sender instead od the presentReceiver.
+
+### Actors:
+- **Attacker**: The presentReceiver and the caller of buyPresent() whose Status is NAUGHTY or NICE.
+- **Victim**: Everyone else, santa, the protocol.
+- **Protocol**: The SantasList contract itself.
+
+### Exploit Scenario:
+- **Initial State**: The Protocol is already deployed and everyone already collected their presents.
+- **Step 1**: the Attacker who has a santaToken balance of 0 calls buyPresent() by passing as argument his address.
+- **Outcome**: the balance of the attacker reaches type(uint256).max because of the underflow inside the _burn() function from the solmate library that uses the unchecked() box for optimization purposes. That function was called by the burn() function of SantaToken that was called by buyPresent().
+- **Implications**: This vulnerability makes it possible for pretty much everyone to print money just by calling a function. The whole protocol is broken because the amount of tokens being maxed out by the attacker is not the same as the number of tokens in the system. 
+
+## Recommendation
+
+Make the following change:
+
+```diff
+-
++        require(balanceOf(presentReceiver) >= 1e18)
+-        i_santaToken.burn(presentReceiver);
++        i_santaToken.burn(msg.sender);
+
+-        _mintAndIncrement();
++        _safeMint(presentReceiver, s_tokenCounter++);
 
 ```
