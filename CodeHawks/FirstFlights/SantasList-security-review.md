@@ -57,7 +57,7 @@ Make the following change:
 
 ```diff
 -
-+        require(balanceOf(presentReceiver) >= 1e18)
++        require(balanceOf(presentReceiver) >= 1e18, "Not enough tokens in the balance");
 -        i_santaToken.burn(presentReceiver);
 +        i_santaToken.burn(msg.sender);
 
