@@ -65,7 +65,7 @@ Make the following change:
 
 ```
 
-## H0 [Bad Access Control for checkList()]
+## H2 [Bad Logic Implementation for collectPresent()]
 
 ### Overview:
 poorly written check allowing NICE people to buy an infinite amount of NFT via collectPresent() 
