@@ -60,7 +60,6 @@ Make the following change:
 +        require(balanceOf(presentReceiver) >= 1e18, "Not enough tokens in the balance");
 -        i_santaToken.burn(presentReceiver);
 +        i_santaToken.burn(msg.sender);
-
 -        _mintAndIncrement();
 +        _safeMint(presentReceiver, s_tokenCounter++);
 
