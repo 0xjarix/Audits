@@ -29,6 +29,12 @@ File: src/adapter/Curve2PoolAdapter.sol
 
 File: src/adapter/Curve2PoolAdapter.sol
 173: uint256 outputAmount = _convertDecimals(decimals[outputToken], NORMALIZED_DECIMALS, rawOutputAmount);
+
+File: src/adapter/CurveTricryptoAdapter.sol
+188: uint256 rawInputAmount = _convertDecimals(NORMALIZED_DECIMALS, decimals[inputToken], inputAmount);
+
+File: src/adapter/CurveTricryptoAdapter.sol
+255: uint256 outputAmount = _convertDecimals(decimals[outputToken], NORMALIZED_DECIMALS, rawOutputAmount);
 ```
 ### Actors:
 - **Victim**: the user of the shell protocol
