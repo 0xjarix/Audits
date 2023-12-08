@@ -9,28 +9,26 @@
 ## H0 [Bad Math Arithmetic in convertDecimals()]
 
 ### Overview:
-The convertDecimals() function inside the OceanAdapter contract performs bad arithmetic
+The convertDecimals() function inside the OceanAdapter contract performs bad arithmetic. This function is called twice inside each of the following contracts: Curve2PoolAdapter and CurveTriCryptoAdapter, in the primitiveOutputAmount() function of these 2 contracts.
 
 ### Actors:
-- **Attacker**: the malicious user.
-- **Victim**: Santa.
-- **Protocol**: The SantasList contract itself.
+- **Victim**: the user of the shell protocol
+- **Attacker**: the pool that is calling this function
+- **Protocol**: The Shell Protocol
 
 ### Exploit Scenario:
-- **Initial State**: The Protocol is already deployed and the Victim is calling the checkList() function a few times for some addresses.
-- **Step 1**: the Victim calls checkList() by passing as a 1st argument the address of a person that turns out to be the Attacker and as a 2nd argument the status NAUGHTY.
-- **Step 2**: The Attacker calls getNaughtyOrNiceOnce() by passing as argument his address and gets as a return value the status NAUGHTY.
-- **Step 3**: the Attacker calls checkList() by passing as a 1st argument his address and as a 2nd argument the status NICE.
-- **Step 4**: the Victim calls checkTwice() by passing as a 1st argument the address of the Attacker and as a 2nd argument the status NAUGHTY.
-- **Outcome**: checkTwice() reverts with SantasList__SecondCheckDoesntMatchFirst() error.
-- **Implications**: If all the people would call checkList() right after santa to change their status to be the opposite of the return value of getNaughtyOrNiceOnce(), christmas will be ruined as no checkTwice() would revert everytime and no one would be elligible for a present.
-
-## Recommendation
-
-Make the following change:
-
-```diff
-- function checkList(address person, Status status) external {
-+ function checkList(address person, Status status) external onlySanta {
-
-```
+- **Initial State**: The Protocol is already deployed.
+- **Step 1**: the Attacker calls the primitiveOutputAmount() with the ID of USDC as inputToken and the ID of WETH as outputToken, inputAmount equal to 99,999,999,999 and a minimumOutputAmount equal to 0
+- **Step 2**: The primitiveOutputAmount() calls the _convertDecimals() a first time to set rawInputAmount
+- **Step 4**: since USDC uses only 6 decimals and WETH uses 18, the _convertDecimals() will enter this part of the function:
+  ```
+  } else {
+            // Decimal shift right (remove precision) -> truncation
+            uint256 shift = 10 ** (uint256(decimalsFrom - decimalsTo));
+            convertedAmount = amountToConvert / shift;
+        }
+  ```
+- **Step 5**: shift = 10^12
+- **Step 5**: convertedAmount = amountToConvert / shift = 99,999,999,999 / 10^12 = 0
+- **Outcome**: rawInputAmount == 0
+- **Impact**: The pool will be able to give an outputAmount corresponding to the rawInputAmount = 0
