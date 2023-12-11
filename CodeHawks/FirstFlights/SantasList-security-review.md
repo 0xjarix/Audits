@@ -38,7 +38,7 @@ Make the following change:
 ## H1 [Bad ALogic Implementation When Buying a Present for Someone Else]
 
 ### Overview:
-The function buyPresent() is badly implemented as it burns santaTokens in an unsafe manner that might cause an underflow from the presentReceiver instead of the msg.sender and sends the NFT to the msg.sender instead of the presentReceiver.
+The function buyPresent() is badly implemented as it burns santaTokens in an unsafe manner (could revert a transaction) from the presentReceiver instead of the msg.sender and sends the NFT to the msg.sender instead of the presentReceiver.
 
 ### Actors:
 - **Attacker**: The presentReceiver and the caller of buyPresent() whose Status is NAUGHTY or NICE.
