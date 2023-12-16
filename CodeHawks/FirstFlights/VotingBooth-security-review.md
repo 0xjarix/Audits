@@ -25,7 +25,7 @@ uint256 rewardPerVoter = totalRewards / totalVotes;
 - **Step 3**: Victim#2 who is voters[2] in the PoC below votes for the proposal by calling booth.vote(true)
 - **Outcome**: victim#1 gets rewarded 0.33...33 ETH instead of 0.5 ETH and victim#2 gets rewarded 0.33...34 ETH instead of 0.5 ETH. The funds that have not been distributed will remain locked inside the protocol.
 - **Implications**: Funds will be locked inside the protocol and the voters who voted for the proposol will receive less than they deserve. In the PoC below I assumed the creator sends 1 ether which is the minimum funding, had he send more, the amount of funds locked would increase as well. Voters can predict how much they're owed as nothing is hashed and everything is available onchain and people can read the storage and know who voted for and who voted against the proposal. That would leave them angry at the protocol and the creator.
-- 
+  
 ### Proof of Concept:
 ```solidity
 // SPDX-License-Identifier: MIT
