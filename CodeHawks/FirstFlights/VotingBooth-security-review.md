@@ -6,7 +6,7 @@
 ---
 
 # High Severity Finding
-## H0 - Bad logic imlementation
+## H0 - Bad Logic Imlementation
 
 ### Overview:
 VotersFor rewards is less than it should be and funds are locked forever due to bad logic implementation in the _distributeRewards() function called internally by vote(). The rewards are calculated as if they were going to be distributed to all the voters, not just the votersFor.
@@ -73,7 +73,9 @@ contract Poc is Script {
     }
 }
 ```
-  
+![Screenshot 2023-12-16 at 02 46 01](https://github.com/0xjarix/Audits/assets/55955137/9e84c02c-e367-4370-8b7c-bca119e0be19)
+
+
 ## Recommendation
 
 Make the following change:
