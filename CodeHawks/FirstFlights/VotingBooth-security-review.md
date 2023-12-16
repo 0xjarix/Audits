@@ -6,10 +6,13 @@
 ---
 
 # High Severity Finding
-## H0 - Proof of Concept for [Bad logic imlementation]
+## H0 - Bad logic imlementation
 
 ### Overview:
-VotersFor rewards is less than it should be and funds are locked forever due to bad logic implementation.
+VotersFor rewards is less than it should be and funds are locked forever due to bad logic implementation in the _distributeRewards() function called internally by vote(). The rewards are calculated as if they were going to be distributed to all the voters, not just the votersFor.
+```solidity
+uint256 rewardPerVoter = totalRewards / totalVotes;
+```
 
 ### Actors:
 - **Victims**: VotersFor when there are votersAgainst
@@ -20,6 +23,10 @@ VotersFor rewards is less than it should be and funds are locked forever due to 
 - **Step 1**: Victim#1 who is voters[0] in the PoC below votes for the proposal by calling booth.vote(true)
 - **Step 2**: voters[2] in the PoC below votes against the proposal by calling booth.vote(false)
 - **Step 3**: Victim#2 who is voters[2] in the PoC below votes for the proposal by calling booth.vote(true)
+- **Outcome**: victim#1 gets rewarded 0.33...33 ETH instead of 0.5 ETH and victim#2 gets rewarded 0.33...34 ETH instead of 0.5 ETH. The funds that have not been distributed will remain locked inside the protocol.
+- **Implications**: Funds will be locked inside the protocol and the voters who voted for the proposol will receive less than they deserve. In the PoC below I assumed the creator sends 1 ether which is the minimum funding, had he send more, the amount of funds locked would increase as well. Voters can predict how much they're owed as nothing is hashed and everything is available onchain and people can read the storage and know who voted for and who voted against the proposal. That would leave them angry at the protocol and the creator.
+- 
+### Proof of Concept:
 ```solidity
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
@@ -66,8 +73,6 @@ contract Poc is Script {
     }
 }
 ```
-- **Outcome**: victim#1 gets rewarded 0.33...33 ETH instead of 0.5 ETH and victim#2 gets rewarded 0.33...34 ETH instead of 0.5 ETH. The funds that have not been distributed will remain locked inside the protocol.
-- **Implications**: Funds will be locked inside the protocol and the voters who voted for the proposol will receive less than they deserve. In the PoC above I assumed the creator sends 1 ether which is the minimum funding, had he send more, the amount of funds locked would increase as well. Voters can predict how much they're owed as nothing is hashed and everything is available onchain and people can read the storage and know who voted for and who voted against the proposal. That would leave them angry at the protocol and the creator.
   
 ## Recommendation
 
