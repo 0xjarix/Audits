@@ -9,35 +9,28 @@ PUSH0 is not supported on Arbitrum for when we use versions of solidity >=0.8.20
 ## Recommendation
 Change to solidity 0.8.19
 
-## H1 [Bad ALogic Implementation When Buying a Present for Someone Else]
+## H0 [NFT not staked when stake() is called]
 
-### Overview:
-The function buyPresent() is badly implemented as it burns santaTokens in an unsafe manner (could revert a transaction) from the presentReceiver instead of the msg.sender and sends the NFT to the msg.sender instead of the presentReceiver.
+## Summary
+When staked, the owner of the NFT is still the user, but it is supposed to be the street contract for all the duration of the staking.
 
-### Actors:
-- **Attacker**: The presentReceiver and the caller of buyPresent() whose Status is NAUGHTY or NICE.
-- **Victim**: Everyone else, santa, the protocol.
-- **Protocol**: The SantasList contract itself.
+## Vulnerability Details
+In fact, the street contract never receive the NFT since onERC721Received is never triggered since transferFrom() doesn't call the checkOnERC721Received, unlike safeTransferFrom(). Also stakes[tokenId] is set before transferFrom is called, and since transferFrom will not revert, the call is successful
 
-### Exploit Scenario:
-- **Initial State**: The Protocol is already deployed and everyone already collected their presents.
-- **Step 1**: the Attacker who has a santaToken balance of 0 calls buyPresent() by passing as argument his address.
-- **Outcome**: the balance of the attacker reaches type(uint256).max because of the underflow inside the _burn() function from the solmate library that uses the unchecked() box for optimization purposes. That function was called by the burn() function of SantaToken that was called by buyPresent().
-- **Implications**: This vulnerability makes it possible for pretty much everyone to print money just by calling a function. The whole protocol is broken because the amount of tokens being maxed out by the attacker is not the same as the number of tokens in the system. 
 
-## Recommendation
+## Impact
+User can do whatever he wants with his NFT when he's staking as it is not technically in the street contract
 
-Make the following change:
+## Tools Used
+Manual analysis
 
-```diff
--
-+        require(balanceOf(presentReceiver) >= 1e18, "Not enough tokens in the balance");
--        i_santaToken.burn(presentReceiver);
-+        i_santaToken.burn(msg.sender);
--        _mintAndIncrement();
-+        _safeMint(presentReceiver, s_tokenCounter++);
-
-```
+## Recommendations
+Use safeTransferFrom instead of transferFrom in the stake() function and modify stake so it looks like this:
+function stake(uint256 tokenId) external {
+        oneShotContract.safeTransferFrom(msg.sender, address(this), tokenId);
+        stakes[tokenId] = Stake(block.timestamp, msg.sender);
+        emit Staked(msg.sender, tokenId, block.timestamp);
+    }
 
 ## H2 [Bad Logic Implementation for collectPresent()]
 
