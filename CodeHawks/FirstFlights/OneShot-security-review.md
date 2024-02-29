@@ -61,3 +61,5 @@ function mintRapper() public {
         _safeMint(msg.sender, tokenId);
     }
 ```
+
+## H2 [Weak PRNG]
