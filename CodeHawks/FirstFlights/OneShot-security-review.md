@@ -46,7 +46,7 @@ CEI pattern was not respected in the mintRapper() function, alowing attacker to 
 - **Step 1**: The Attacker creates a malicious contract calls mintRapper and performs a reentrant call inside the onERC721Received callback that he would also have implemented to allow his contract receiving the NFTs.
 - **Outcome**: Attacker already has attributes worth 3 days of staking, without the credTokens of course
   RapperStats({weakKnees: false, heavyArms: false, spaghettiSweater: false, calmAndReady: false, battlesWon: 0});
-- **Implications**: Attacker has street experience without getting to the street, he can mint several NFTs and make them pparticipate in rap battles
+- **Implications**: Attacker has street experience without getting to the street, he can mint several NFTs and make them participate in rap battles
 
 ## Recommendation
 
