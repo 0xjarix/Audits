@@ -63,3 +63,24 @@ function mintRapper() public {
 ```
 
 ## H2 [Weak PRNG]
+## Overview
+weak PRNG in _battle() that makes it possible for the defender to win any battle.
+
+## Vulnerability Details
+in this line:
+uint256 random =
+            uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, msg.sender))) % totalBattleSkill;
+The defender already knows msg.sender since it is the address of the contract he's interacting with.
+The defenfer already can decide the block.timestamp, since he's the one calling goOnStageOrBattle(), he can decide when to call it exactly.
+The defender already knows totalBattleSkill since it's the sum of his skill and his opponent's
+block.prevandao reads the RANDAO mix generated in the previous block. (prev block.difficulty)
+`random` should be unknown to the sender, then the block.prevrandao is useless.
+
+## Impact
+Defender can win any battle and gets defenderBet and _credBet
+
+## Tools Used
+Slither
+
+## Recommendations
+Use chainlink oracle for randomness
