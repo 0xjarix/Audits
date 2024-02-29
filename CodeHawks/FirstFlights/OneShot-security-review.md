@@ -32,30 +32,32 @@ function stake(uint256 tokenId) external {
         emit Staked(msg.sender, tokenId, block.timestamp);
     }
 
-## H2 [Bad Logic Implementation for collectPresent()]
+## H1 [safeMint reentrancy]
 
 ### Overview:
-poorly written check allowing NICE people to buy an infinite amount of NFT via collectPresent() 
+CEI pattern was not respected in the mintRapper() function, alowing attacker to mint several tokens with better default attributes.
 
 ### Actors:
-- **Attacker**: the malicious NICE person.
-- **Victim**: SantasList.
+- **Attacker**: the malicious minter.
 - **Protocol**: The SantasList contract itself.
 
 ### Exploit Scenario:
-- **Initial State**: The Protocol is already deployed and the people are calling the collectPresent() function.
-- **Step 1**: The Attacker calls collectPresent() and gets his NFT.
-- **Step 2**: The Attacker calls collectPresent() and gets his NFT.
-- **Step 3**: The Attacker calls collectPresent() and gets his NFT.
-- **Step 4**: I can make up infinite number of steps like that, actually the NICE person can keep on calling collectPresent() and collect his NFTs as many times as he wants, because the check that was supposed to prevent NICE people from collecting an NFT more than once checks the santaToken's balance that is only minted by EXTRA-NICE people. Hence this check is irrelevant for NICE people. For a matter of fact, according to the documentation and comments, it is also irrelevant for EXTRA-NICE people since they can buy a present for someone else by burning their santaTokens, thus finding a way to set their balance to 0 and be able to call collectPresent() again. However, buyPresent() is badly implemented.
-- **Outcome**: NICE people can mint as many NFTs as they want.
-- **Implications**: This vulnerability makes it possible for everyone NICE to collect an unlimited amount of NFTs just by calling a function again and again. The whole protocol is broken.
+- **Initial State**: The Protocol is already deployed and the people are calling the mintRapper() function.
+- **Step 1**: The Attacker creates a malicious contract calls mintRapper and performs a reentrant call inside the onERC721Received callback that he would also have implemented to allow his contract receiving the NFTs.
+- **Outcome**: Attacker already has attributes worth 3 days of staking, without the credTokens of course
+  RapperStats({weakKnees: false, heavyArms: false, spaghettiSweater: false, calmAndReady: false, battlesWon: 0});
+- **Implications**: Attacker has street experience without getting to the street, he can mint several NFTs and make them pparticipate in rap battles
 
 ## Recommendation
 
 Make the following changes:
-Declare a mapping in the storage: ```mapping(address person => bool collected) private s_theListCheckedCollection;```
-Remove this condition: ```if (balanceOf(msg.sender) > 0)```
-Add this one instead:  ```if (s_theListCheckedCollection[msg.sender])```
-Keep the revert.
-Before the 2 return, set ```s_theListCheckedCollection[msg.sender] = true;```
+```
+function mintRapper() public {
+        uint256 tokenId = _nextTokenId++;
+
+        // Initialize metadata for the minted token
+        rapperStats[tokenId] =
+            RapperStats({weakKnees: true, heavyArms: true, spaghettiSweater: true, calmAndReady: false, battlesWon: 0});
+        _safeMint(msg.sender, tokenId);
+    }
+```
