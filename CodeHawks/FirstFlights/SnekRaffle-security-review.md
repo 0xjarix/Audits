@@ -40,7 +40,7 @@ send(recent_winner, self.balance)
 ```
 
 ### Actors
-*Protocol*: snek raffle contract
+*Protocol*: snek raffle contract  
 *Attacker*: the winner
 
 ### Exploit Scenario:
