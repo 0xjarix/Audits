@@ -14,8 +14,16 @@ NFTs of different rarity have the same chance of getting minted
 rarity: uint256 = random_words[0] % 3
 ```
 
-### Exploit Scenario:
-
+### Vulnerability Details
+from this line of code: rarity:
+```vyper
+rarity: uint256 = random_words[0] % 3
+```
+We can deduce that the chances of getting each of the 3 types of NFTs are equal (33.333...% each), unlike what the documentation stated: 
+70% of chance of getting a common NFT
+25% of chance of getting a rare NFT
+5% of chance of getting a legendary NFT
+The winner will have equal chances of getting these NFTs
 
 ## Recommendation
 
@@ -44,7 +52,7 @@ send(recent_winner, self.balance)
 *Attacker*: the winner
 
 ### Exploit Scenario:
-- **Initial State**: The Protocol is deployed, players are entering the race, as well as some malicious contracts created by the attacker.
+- **Initial State**: The Protocol is deployed, players are entering the raffle, as well as some malicious contracts created by the attacker.
 - **Step 1**: request_raffle_winner() is called, the state is CALCULATING.
 - **Step 2**: rawFulfillRandomWords() is called by the VRF_COORDINATOR which triggers the call to fulfillRandomWords()
 - **Step 3**: The attacker created several malicious contract containing a fallback function that reverts when the contract receives ETH and entered the raffle several times with each of his contracts to increase his chances of winning, eventually one of his contracts was selected to be the winner.
