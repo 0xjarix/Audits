@@ -35,7 +35,7 @@ Make the following change:
 + rarity: uint256 = 0
 + if percentage < LEGEND_RARITY:
 +     rarity = 2
-+ elif percentage < RARE_RARITY:
++ elif percentage < RARE_RARITY + LEGEND_RARITY:
 +     rarity = 1
 ```
 
